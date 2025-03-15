@@ -151,8 +151,9 @@ class StreamClient {
   /// Gets the actual stream which is identified by the specified metadata.
   /// Usually this downloads the bytes of the stream.
   /// For HLS streams all the fragments are concatenated into a single stream.
-  Stream<List<int>> get(StreamInfo streamInfo) =>
-      _httpClient.getStream(streamInfo, streamClient: this);
+  Stream<List<int>> get(StreamInfo streamInfo, int start, int end) =>
+      _httpClient.getStream(streamInfo,
+          streamClient: this, start: start, end: end);
 
   Stream<StreamInfo> _getStreams(VideoId videoId,
       {required YoutubeApiClient ytClient,

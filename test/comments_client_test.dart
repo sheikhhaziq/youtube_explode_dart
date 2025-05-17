@@ -1,8 +1,6 @@
 import 'package:test/test.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
-import 'skip_gh.dart';
-
 void main() {
   YoutubeExplode? yt;
   setUpAll(() {

@@ -13,6 +13,11 @@ class JSEngine {
     context['Math'] = {
       'pow': (List<dynamic> args) => pow(args[0], args[1]),
     };
+    context['String'] = {
+      'fromCharCode': (List<dynamic> args) {
+        return String.fromCharCodes(args.cast<int>());
+      },
+    };
   }
 
   void parse(String code) {
@@ -40,15 +45,16 @@ class JSEngine {
     return context['return'];
   }
 
-  void resolveNode(Node node) {
+  dynamic resolveNode(Node node) {
     return switch (node) {
       Statement() => resolveStatement(node),
       Expression() => resolveExpression(node),
+      Name() => node.value,
       Node() => throw UnimplementedError('Unknown node type: $node'),
     };
   }
 
-  void resolveStatement(Statement statement) {
+  dynamic resolveStatement(Statement statement) {
     return switch (statement) {
       VariableDeclaration() => resolveVariableDeclaration(statement),
       ExpressionStatement() => resolveExpression(statement.expression),
@@ -168,10 +174,7 @@ class JSEngine {
     return callee(resolvedArgs);
   }
 
-  dynamic resolveMemberExpression(MemberExpression member) {
-    final obj = resolveExpression(member.object);
-    final prop = member.property.value;
-
+  dynamic _resolveMember(dynamic obj, String prop) {
     if (obj is Map) {
       return obj[prop];
     }
@@ -283,7 +286,14 @@ class JSEngine {
         _logger.finest(args.join('\n'));
       };
     }
-    throw UnimplementedError('Unknown member expression: $member.$prop');
+    throw UnimplementedError('Unknown member expression: $obj.$prop');
+  }
+
+  dynamic resolveMemberExpression(MemberExpression member) {
+    final obj = resolveExpression(member.object);
+    final prop = member.property.value;
+
+    return _resolveMember(obj, prop);
   }
 
   dynamic resolveFunctionExpression(FunctionExpression func) {
@@ -459,7 +469,15 @@ class JSEngine {
     if (index is double) {
       index = index.toInt();
     }
-    return resolveExpression(expr.object)[index];
+    final obj = resolveExpression(expr.object);
+    if (obj == null) {
+      throw StateError(
+          'Cannot resolve index on null object: ${expr.object}[$index]');
+    }
+    if (obj is List && index is int) {
+      return obj[index];
+    }
+    return _resolveMember(obj, index);
   }
 
   dynamic resolveSequenceExpression(SequenceExpression expr) {
@@ -503,9 +521,20 @@ class JSEngine {
       IndexExpression() => resolveIndexExpression(expr),
       ConditionalExpression() => resolveConditionalExpression(expr),
       ThisExpression() => resolveThisExpression(),
+      ObjectExpression() => resolveObjectExpression(expr),
       Expression() =>
         throw UnimplementedError('Unknown expression type: $expr'),
     };
+  }
+
+  dynamic resolveObjectExpression(ObjectExpression expr) {
+    final obj = <String, dynamic>{};
+    for (final prop in expr.properties) {
+      final key = resolveNode(prop.key);
+      final value = resolveNode(prop.value);
+      obj[key] = value;
+    }
+    return obj;
   }
 }
 

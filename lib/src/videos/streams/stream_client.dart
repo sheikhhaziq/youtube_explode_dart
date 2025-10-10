@@ -6,6 +6,7 @@ import '../../exceptions/exceptions.dart';
 import '../../extensions/helpers_extension.dart';
 import '../../js/js_engine.dart';
 import '../../retry.dart';
+import '../../reverse_engineering/cipher/chiper_new.dart';
 import '../../reverse_engineering/cipher/cipher_manifest.dart';
 import '../../reverse_engineering/heuristics.dart';
 import '../../reverse_engineering/models/stream_info_provider.dart';
@@ -114,6 +115,10 @@ class StreamClient {
       return getManifest(videoId, ytClients: [YoutubeApiClient.tv]);
     }
     if (uniqueStreams.isEmpty) {
+      if (lastException is Error && lastException.stackTrace != null) {
+        throw Error.throwWithStackTrace(
+            lastException, lastException.stackTrace!);
+      }
       throw lastException ??
           VideoUnavailableException(
               'Video "$videoId" has no available streams');
@@ -209,18 +214,64 @@ class StreamClient {
   }
 
   String? _playerScript;
+  String? _globalVar;
+
+  String? _getGlobalVar(String playerScript) {
+    // Adapted from https://github.com/yt-dlp/yt-dlp/blob/7794374de8afb20499b023107e2abfd4e6b93ee4/yt_dlp/extractor/youtube/_video.py#L2295
+    return _globalVar ??= _matchPatterns(playerScript, [
+      (
+        r'''
+(["\'])use\s+strict\1;\s*(var\s+[a-zA-Z0-9_$]+\s*=\s*((["\'])(?:(?!(\4)).|\\.)+\4\.split\((["\'])(?:(?!(\6)).)+\6\)|\[\s*(?:(["\'])(?:(?!(\8)).|\\.)*\8\s*,?\s*)+\]))[;,]
+''',
+        2
+      ),
+    ]);
+  }
+
   Future<String> _getPlayerScript([WatchPage? page]) async {
     page ??= await WatchPage.get(_httpClient, '');
     return _playerScript ??= await _httpClient.getString(page.sourceUrl);
   }
 
+  static String? _matchPatterns(String str, List<(String, int)> patterns) {
+    for (final (pattern, group) in patterns) {
+      final regex = RegExp(pattern, dotAll: true);
+      final match = regex.firstMatch(str);
+      if (match != null && match.groupCount >= group) {
+        return match.group(group)!;
+      }
+    }
+    return null;
+  }
+
   Future<String> _getDecipherFunction(WatchPage watchPage) async {
     final playerScript = await _getPlayerScript(watchPage);
-    final funcNameExp = RegExp(
+
+    final funcMatch = _matchPatterns(playerScript, [
+      (
         r'function\(\w+\)\{[^}]*\.slice\(0,0\).*?return\s?\w+?\.join\(""\)};',
-        dotAll: true);
-    final funcMatch = funcNameExp.firstMatch(playerScript);
-    return funcMatch!.group(0)!.replaceFirst('function', 'function main');
+        0
+      ),
+      (
+        r'function\s*\(\s*(?:[a-zA-Z0-9_$]+)\s*\)\s*\{(?:(?!function\s*\(\s*(?:[a-zA-Z0-9_$]+)\s*\)\s*\{)[\s\S])*?var\s+([a-zA-Z0-9_$]+)\s*=\s*(?:[a-zA-Z0-9_$]+)\[([a-zA-Z0-9_$]+)\[\d+\]\][\s\S]*?return\s+\1\[\2\[\d+\]\]\(\2\[\d+\]\)\s*?\};',
+        0
+      )
+    ]);
+
+    if (funcMatch == null) {
+      throw YoutubeExplodeException(
+          'Could not find the decipher function in the player script.');
+    }
+
+    final globalVar = _getGlobalVar(playerScript);
+
+    final func = funcMatch.replaceFirst('function', 'function main');
+
+    if (globalVar != null) {
+      // inject the global var into the function after the first '{'
+      return func.replaceFirst('{', '{$globalVar;');
+    }
+    return func;
   }
 
   final _nSigCache = <String, String>{};
@@ -234,8 +285,12 @@ class StreamClient {
 
     for (final stream in streams) {
       final itag = stream.tag;
-      var url = Uri.parse(stream.url);
-
+      late Uri url;
+      try {
+        url = Uri.parse(stream.url);
+      } catch (e) {
+        continue;
+      }
       if (url.queryParameters.containsKey('n')) {
         final nParam = url.queryParameters['n']!;
         late final String deciphered;
@@ -251,8 +306,8 @@ class StreamClient {
         url = url.setQueryParam('n', deciphered);
       }
       if (stream.signatureParameter != null) {
-        cipherManifest ??=
-            CipherManifest.decode(await _getPlayerScript(watchPage));
+        final playerScript = await _getPlayerScript(watchPage);
+        cipherManifest ??= CipherManifest.decode(playerScript);
         final sig = stream.signature!;
         final sigParam = stream.signatureParameter!;
         if (cipherManifest != null) {
@@ -260,7 +315,19 @@ class StreamClient {
           url = url.setQueryParam(sigParam, sigDeciphered);
           _logger.fine('Deciphered signature: $sig -> $sigDeciphered');
         } else {
-          _logger.warning('Could not decipher signature: $sig');
+          final globalVar = _getGlobalVar(playerScript);
+
+          final deciphererFunc =
+              getDecipherSignatureFunc(globalVar, playerScript);
+          final deciphered = deciphererFunc?.call(sig);
+          if (deciphered != null) {
+            url = url.setQueryParam(sigParam, deciphered);
+            _logger.fine('[2] Deciphered signature: $sig -> $deciphered');
+          } else {
+            // If we cannot decipher the signature, we log a warning
+            // and continue with the original URL.
+            _logger.warning('Could not decipher signature: $sig');
+          }
         }
       }
 

@@ -8,7 +8,9 @@ import 'package:logging/logging.dart';
 import '../exceptions/exceptions.dart';
 import '../extensions/helpers_extension.dart';
 import '../retry.dart';
+import '../videos/streams/mixins/hls_stream_info.dart';
 import '../videos/streams/streams.dart';
+import 'hls_manifest.dart';
 
 /// HttpClient wrapper for YouTube
 class YoutubeHttpClient extends http.BaseClient {
@@ -145,19 +147,19 @@ class YoutubeHttpClient extends http.BaseClient {
     int errorCount = 0,
     required StreamClient streamClient,
   }) {
-    // if (streamInfo.fragments.isNotEmpty) {
-    //   // DASH(fragmented) stream
-    //   return _getFragmentedStream(
-    //     streamInfo,
-    //     headers: headers,
-    //     validate: validate,
-    //     start: start,
-    //     errorCount: errorCount,
-    //   );
-    // }
-    // if (streamInfo is HlsStreamInfo) {
-    //   return _getHlsStream(streamInfo);
-    // }
+    if (streamInfo.fragments.isNotEmpty) {
+      // DASH(fragmented) stream
+      return _getFragmentedStream(
+        streamInfo,
+        headers: headers,
+        validate: validate,
+        start: start,
+        errorCount: errorCount,
+      );
+    }
+    if (streamInfo is HlsStreamInfo) {
+      return _getHlsStream(streamInfo);
+    }
     // Normal stream
     return _getStream(
       streamInfo,
@@ -170,23 +172,23 @@ class YoutubeHttpClient extends http.BaseClient {
     );
   }
 
-  // Stream<List<int>> _getFragmentedStream(
-  //   StreamInfo streamInfo, {
-  //   Map<String, String> headers = const {},
-  //   bool validate = true,
-  //   int start = 0,
-  //   int errorCount = 0,
-  // }) async* {
-  //   // This is the base url.
-  //   final url = streamInfo.url;
-  //   for (final fragment in streamInfo.fragments) {
-  //     final req = await retry(
-  //       this,
-  //       () => get(Uri.parse(url.toString() + fragment.path)),
-  //     );
-  //     yield req.bodyBytes;
-  //   }
-  // }
+  Stream<List<int>> _getFragmentedStream(
+    StreamInfo streamInfo, {
+    Map<String, String> headers = const {},
+    bool validate = true,
+    int start = 0,
+    int errorCount = 0,
+  }) async* {
+    // This is the base url.
+    final url = streamInfo.url;
+    for (final fragment in streamInfo.fragments) {
+      final req = await retry(
+        this,
+        () => get(Uri.parse(url.toString() + fragment.path)),
+      );
+      yield req.bodyBytes;
+    }
+  }
 
   Stream<List<int>> _getStream(
     StreamInfo streamInfo, {
@@ -321,14 +323,14 @@ class YoutubeHttpClient extends http.BaseClient {
     });
   }
 
-  // Stream<List<int>> _getHlsStream(HlsStreamInfo stream) async* {
-  //   final videoIndex = await getString(stream.url);
-  //   final video = HlsManifest.parseVideoSegments(videoIndex);
-  //   for (final segment in video) {
-  //     final data = await get(Uri.parse(segment.url));
-  //     yield data.bodyBytes;
-  //   }
-  // }
+  Stream<List<int>> _getHlsStream(HlsStreamInfo stream) async* {
+    final videoIndex = await getString(stream.url);
+    final video = HlsManifest.parseVideoSegments(videoIndex);
+    for (final segment in video) {
+      final data = await get(Uri.parse(segment.url));
+      yield data.bodyBytes;
+    }
+  }
 
   @override
   void close() {

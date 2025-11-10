@@ -55,9 +55,6 @@ mixin _$Video {
 //ignore: avoid_positional_boolean_parameters
   bool get isLive;
 
-  /// Music data such as song, artist, album, and image.
-  List<MusicData> get musicData;
-
   /// Used internally.
   /// Shouldn't be used in the code.
   @internal
@@ -96,7 +93,6 @@ mixin _$Video {
             (identical(other.engagement, engagement) ||
                 other.engagement == engagement) &&
             (identical(other.isLive, isLive) || other.isLive == isLive) &&
-            const DeepCollectionEquality().equals(other.musicData, musicData) &&
             (identical(other.watchPage, watchPage) ||
                 other.watchPage == watchPage));
   }
@@ -117,12 +113,11 @@ mixin _$Video {
       const DeepCollectionEquality().hash(keywords),
       engagement,
       isLive,
-      const DeepCollectionEquality().hash(musicData),
       watchPage);
 
   @override
   String toString() {
-    return 'Video(id: $id, title: $title, author: $author, channelId: $channelId, uploadDate: $uploadDate, uploadDateRaw: $uploadDateRaw, publishDate: $publishDate, description: $description, duration: $duration, thumbnails: $thumbnails, keywords: $keywords, engagement: $engagement, isLive: $isLive, musicData: $musicData, watchPage: $watchPage)';
+    return 'Video(id: $id, title: $title, author: $author, channelId: $channelId, uploadDate: $uploadDate, uploadDateRaw: $uploadDateRaw, publishDate: $publishDate, description: $description, duration: $duration, thumbnails: $thumbnails, keywords: $keywords, engagement: $engagement, isLive: $isLive, watchPage: $watchPage)';
   }
 }
 
@@ -145,7 +140,6 @@ abstract mixin class $VideoCopyWith<$Res> {
       UnmodifiableListView<String> keywords,
       Engagement engagement,
       bool isLive,
-      List<MusicData> musicData,
       @internal WatchPage? watchPage});
 
   $VideoIdCopyWith<$Res> get id;
@@ -179,7 +173,6 @@ class _$VideoCopyWithImpl<$Res> implements $VideoCopyWith<$Res> {
     Object? keywords = null,
     Object? engagement = null,
     Object? isLive = null,
-    Object? musicData = null,
     Object? watchPage = freezed,
   }) {
     return _then(_self.copyWith(
@@ -235,10 +228,6 @@ class _$VideoCopyWithImpl<$Res> implements $VideoCopyWith<$Res> {
           ? _self.isLive
           : isLive // ignore: cast_nullable_to_non_nullable
               as bool,
-      musicData: null == musicData
-          ? _self.musicData
-          : musicData // ignore: cast_nullable_to_non_nullable
-              as List<MusicData>,
       watchPage: freezed == watchPage
           ? _self.watchPage
           : watchPage // ignore: cast_nullable_to_non_nullable
@@ -304,10 +293,8 @@ class _Video extends Video {
       this.keywords,
       this.engagement,
       this.isLive,
-      final List<MusicData> musicData,
       [@internal this.watchPage])
-      : _musicData = musicData,
-        super._();
+      : super._();
 
   /// Video ID.
   @override
@@ -362,17 +349,6 @@ class _Video extends Video {
   @override
   final bool isLive;
 
-  /// Music data such as song, artist, album, and image.
-  final List<MusicData> _musicData;
-
-  /// Music data such as song, artist, album, and image.
-  @override
-  List<MusicData> get musicData {
-    if (_musicData is EqualUnmodifiableListView) return _musicData;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_musicData);
-  }
-
   /// Used internally.
   /// Shouldn't be used in the code.
   @override
@@ -413,8 +389,6 @@ class _Video extends Video {
             (identical(other.engagement, engagement) ||
                 other.engagement == engagement) &&
             (identical(other.isLive, isLive) || other.isLive == isLive) &&
-            const DeepCollectionEquality()
-                .equals(other._musicData, _musicData) &&
             (identical(other.watchPage, watchPage) ||
                 other.watchPage == watchPage));
   }
@@ -435,12 +409,11 @@ class _Video extends Video {
       const DeepCollectionEquality().hash(keywords),
       engagement,
       isLive,
-      const DeepCollectionEquality().hash(_musicData),
       watchPage);
 
   @override
   String toString() {
-    return 'Video._internal(id: $id, title: $title, author: $author, channelId: $channelId, uploadDate: $uploadDate, uploadDateRaw: $uploadDateRaw, publishDate: $publishDate, description: $description, duration: $duration, thumbnails: $thumbnails, keywords: $keywords, engagement: $engagement, isLive: $isLive, musicData: $musicData, watchPage: $watchPage)';
+    return 'Video._internal(id: $id, title: $title, author: $author, channelId: $channelId, uploadDate: $uploadDate, uploadDateRaw: $uploadDateRaw, publishDate: $publishDate, description: $description, duration: $duration, thumbnails: $thumbnails, keywords: $keywords, engagement: $engagement, isLive: $isLive, watchPage: $watchPage)';
   }
 }
 
@@ -464,7 +437,6 @@ abstract mixin class _$VideoCopyWith<$Res> implements $VideoCopyWith<$Res> {
       UnmodifiableListView<String> keywords,
       Engagement engagement,
       bool isLive,
-      List<MusicData> musicData,
       @internal WatchPage? watchPage});
 
   @override
@@ -502,7 +474,6 @@ class __$VideoCopyWithImpl<$Res> implements _$VideoCopyWith<$Res> {
     Object? keywords = null,
     Object? engagement = null,
     Object? isLive = null,
-    Object? musicData = null,
     Object? watchPage = freezed,
   }) {
     return _then(_Video(
@@ -558,10 +529,6 @@ class __$VideoCopyWithImpl<$Res> implements _$VideoCopyWith<$Res> {
           ? _self.isLive
           : isLive // ignore: cast_nullable_to_non_nullable
               as bool,
-      null == musicData
-          ? _self._musicData
-          : musicData // ignore: cast_nullable_to_non_nullable
-              as List<MusicData>,
       freezed == watchPage
           ? _self.watchPage
           : watchPage // ignore: cast_nullable_to_non_nullable

@@ -58,36 +58,31 @@ extension StringUtility on String {
 
   /// Format: HH:MM:SS
   Duration? toDuration() {
-    if (this == 'LIVE' || this == 'SHORTS' || trim().isEmpty) {
+    if (this == 'SHORTS' || trim().isEmpty) {
       return null;
     }
 
     final parts = split(':');
     assert(parts.length <= 3);
 
-    try {
-      if (parts.length == 1) {
-        return Duration(seconds: int.parse(parts.first));
-      }
-      if (parts.length == 2) {
-        return Duration(
-          minutes: int.parse(parts[0]),
-          seconds: int.parse(parts[1]),
-        );
-      }
-      if (parts.length == 3) {
-        return Duration(
-          hours: int.parse(parts[0]),
-          minutes: int.parse(parts[1]),
-          seconds: int.parse(parts[2]),
-        );
-      }
-    } on FormatException {
-      return null;
+    if (parts.length == 1) {
+      return Duration(seconds: int.parse(parts.first));
     }
-
+    if (parts.length == 2) {
+      return Duration(
+        minutes: int.parse(parts[0]),
+        seconds: int.parse(parts[1]),
+      );
+    }
+    if (parts.length == 3) {
+      return Duration(
+        hours: int.parse(parts[0]),
+        minutes: int.parse(parts[1]),
+        seconds: int.parse(parts[2]),
+      );
+    }
     // Shouldn't reach here.
-    throw StateError('Invalid duration parts');
+    throw Error();
   }
 
   DateTime parseDateTime() => DateTime.parse(this);
@@ -200,17 +195,6 @@ extension StringUtility2 on String? {
     };
 
     return DateTime.now().subtract(time);
-  }
-
-  Uri? toUri() {
-    if (this == null) {
-      return null;
-    }
-    try {
-      return Uri.parse(this!);
-    } on FormatException {
-      return null;
-    }
   }
 
   DateTime? tryParseDateTime() {

@@ -1,6 +1,5 @@
 import 'package:collection/collection.dart';
 import 'package:html/parser.dart' as parser;
-import 'package:logging/logging.dart';
 
 import '../../../youtube_explode_dart.dart';
 import '../../extensions/helpers_extension.dart';
@@ -55,8 +54,6 @@ class SearchPage extends YoutubePage<_InitialData> {
 }
 
 class _InitialData extends InitialData {
-  static final _logger = Logger('YoutubeExplode.Search.InitialData');
-
   _InitialData(super.root);
 
   List<JsonMap>? getContentContext() {
@@ -143,21 +140,6 @@ class _InitialData extends InitialData {
   late final int estimatedResults =
       int.parse(root.getT<String>('estimatedResults') ?? '0');
 
-  String _getChannelId(Map<String, dynamic> renderer) {
-    final navEndpoint = renderer
-        .getJson<Map<String, dynamic>>('ownerText/runs/0/navigationEndpoint')!;
-
-    if (navEndpoint['browseEndpoint'] != null) {
-      return navEndpoint.getJson<String>('browseEndpoint/browseId')!;
-    }
-    if (navEndpoint['showDialogCommand'] != null) {
-      return navEndpoint.getJson<String>(
-          'showDialogCommand/panelLoadingStrategy/inlineContent/dialogViewModel/customContent/listViewModel/listItems/0/listItemViewModel/rendererContext/commandContext/onTap/innertubeCommand/browseEndpoint/browseId')!;
-    }
-    _logger.warning('Could not parse channelId from search result');
-    return '';
-  }
-
   SearchResult? _parseContent(JsonMap? content) {
     if (content == null) {
       return null;
@@ -167,57 +149,63 @@ class _InitialData extends InitialData {
 
       //       root.get('ownerText')?.getT<List<dynamic>>('runs')?.parseRuns() ??
       return SearchVideo(
-          VideoId(renderer.getT<String>('videoId')!),
-          renderer
-              .get('title')!
-              .getT<List<dynamic>>('runs')!
-              .cast<Map<dynamic, dynamic>>()
-              .parseRuns(),
-          renderer
-              .get('ownerText')!
-              .getT<List<dynamic>>('runs')!
-              .cast<Map<dynamic, dynamic>>()
-              .parseRuns(),
-          renderer
-                  .getList('detailedMetadataSnippets')
-                  ?.firstOrNull
-                  ?.get('snippetText')
-                  ?.getT<List<dynamic>>('runs')
-                  ?.cast<Map<dynamic, dynamic>>()
-                  .parseRuns() ??
-              '',
-          renderer.get('lengthText')?.getT<String>('simpleText') ?? '',
-          int.parse(
-            renderer
-                    .get('viewCountText')
-                    ?.getT<String>('simpleText')
-                    ?.stripNonDigits()
-                    .nullIfWhitespace ??
-                renderer
-                    .get('viewCountText')
-                    ?.getList('runs')
-                    ?.firstOrNull
-                    ?.getT<String>('text')
-                    ?.stripNonDigits()
-                    .nullIfWhitespace ??
-                '0',
-          ),
-          (renderer.get('thumbnail')?.getList('thumbnails') ?? const [])
-              .map(
-                (e) => Thumbnail(Uri.parse(e['url']), e['height'], e['width']),
-              )
-              .toList(),
-          renderer.get('publishedTimeText')?.getT<String>('simpleText'),
+        VideoId(renderer.getT<String>('videoId')!),
+        renderer
+            .get('title')!
+            .getT<List<dynamic>>('runs')!
+            .cast<Map<dynamic, dynamic>>()
+            .parseRuns(),
+        renderer
+            .get('ownerText')!
+            .getT<List<dynamic>>('runs')!
+            .cast<Map<dynamic, dynamic>>()
+            .parseRuns(),
+        renderer
+                .getList('detailedMetadataSnippets')
+                ?.firstOrNull
+                ?.get('snippetText')
+                ?.getT<List<dynamic>>('runs')
+                ?.cast<Map<dynamic, dynamic>>()
+                .parseRuns() ??
+            '',
+        renderer.get('lengthText')?.getT<String>('simpleText') ?? '',
+        int.parse(
           renderer
                   .get('viewCountText')
+                  ?.getT<String>('simpleText')
+                  ?.stripNonDigits()
+                  .nullIfWhitespace ??
+              renderer
+                  .get('viewCountText')
                   ?.getList('runs')
-                  ?.elementAtSafe(1)
+                  ?.firstOrNull
                   ?.getT<String>('text')
-                  ?.trim() ==
-              'watching',
-          _getChannelId(renderer));
+                  ?.stripNonDigits()
+                  .nullIfWhitespace ??
+              '0',
+        ),
+        (renderer.get('thumbnail')?.getList('thumbnails') ?? const [])
+            .map(
+              (e) => Thumbnail(Uri.parse(e['url']), e['height'], e['width']),
+            )
+            .toList(),
+        renderer.get('publishedTimeText')?.getT<String>('simpleText'),
+        renderer
+                .get('viewCountText')
+                ?.getList('runs')
+                ?.elementAtSafe(1)
+                ?.getT<String>('text')
+                ?.trim() ==
+            'watching',
+        renderer
+            .get('ownerText')!
+            .getList('runs')!
+            .first
+            .get('navigationEndpoint')!
+            .get('browseEndpoint')!
+            .getT<String>('browseId')!,
+      );
     }
-
     if (content['radioRenderer'] != null ||
         content['playlistRenderer'] != null) {
       final renderer =

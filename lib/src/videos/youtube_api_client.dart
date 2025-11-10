@@ -25,7 +25,8 @@ class YoutubeApiClient {
         'clientVersion': '20.10.4',
         'deviceMake': 'Apple',
         'deviceModel': 'iPhone16,2',
-        'userAgent': 'com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)',
+        'userAgent':
+            'com.google.ios.youtube/20.10.4 (iPhone16,2; U; CPU iOS 18_3_2 like Mac OS X;)',
         'hl': 'en',
         "platform": "MOBILE",
         'osName': 'IOS',
@@ -43,13 +44,15 @@ class YoutubeApiClient {
     'context': {
       'client': {
         'clientName': 'ANDROID',
-        'clientVersion': '19.09.37',
+        'clientVersion': '20.10.38',
         'androidSdkVersion': 30,
         'userAgent':
-            'com.google.android.youtube/19.09.37 (Linux; U; Android 11) gzip',
+            'com.google.android.youtube/20.10.38 (Linux; U; Android 11) gzip',
         'hl': 'en',
         'timeZone': 'UTC',
         'utcOffsetMinutes': 0,
+        'osName': 'Android',
+        'osVersion': '11',
       },
     },
   }, 'https://www.youtube.com/youtubei/v1/player?prettyPrint=false');
@@ -94,7 +97,7 @@ class YoutubeApiClient {
     'context': {
       'client': {
         'clientName': 'WEB',
-        'clientVersion': '2.20240726.00.00',
+        'clientVersion': '2.20250312.04.00',
         'userAgent':
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/15.5 Safari/605.1.15,gzip(gfe)',
         'hl': 'en',
@@ -109,16 +112,31 @@ class YoutubeApiClient {
       {
         'context': {
           'client': {
+            "deviceMake": "",
+            "deviceModel": "",
+            "userAgent":
+                "Mozilla/5.0 (ChromiumStylePlatform) Cobalt/Version,gzip(gfe)",
             'clientName': 'TVHTML5',
-            'clientVersion': '7.20240724.13.00',
+            "clientVersion": "7.20251105.10.00",
             'hl': 'en',
             'timeZone': 'UTC',
             'gl': 'US',
-            'utcOffsetMinutes': 0
-          }
+            'utcOffsetMinutes': 0,
+            "originalUrl": "https://www.youtube.com/tv",
+            "theme": "CLASSIC",
+            "platform": "DESKTOP",
+            "clientFormFactor": "UNKNOWN_FORM_FACTOR",
+            "webpSupport": false,
+            "configInfo": {},
+            "tvAppInfo": {"appQuality": "TV_APP_QUALITY_FULL_ANIMATION"},
+            "acceptHeader":
+                "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          },
+          "user": {"lockedSafetyMode": false},
+          "request": {"useSsl": true},
         },
         "contentCheckOk": true,
-        "racyCheckOk": true
+        "racyCheckOk": true,
       },
       'https://www.youtube.com/youtubei/v1/player?prettyPrint=false',
       headers: {

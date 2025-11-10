@@ -22,14 +22,17 @@ class YoutubeHttpClient extends http.BaseClient {
 
   bool get closed => _closed;
 
-  static const Map<String, String> _defaultHeaders = {
+  static const Map<String, String> defaultHeaders = {
     'user-agent':
-        'Mozilla/5.0 (X11; Linux x86_64; rv:138.0) Gecko/20100101 Firefox/138.0',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.18 Safari/537.36',
     'cookie': 'CONSENT=YES+cb',
-    'accept': '*/*',
+    'accept':
+        'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9',
     'accept-language': 'en-US,en;q=0.5',
-    'Priority': 'u=0'
   };
+
+  /// For any custom YoutubeHttpClient to override headers easily
+  Map<String, String> get headers => defaultHeaders;
 
   /// Initialize an instance of [YoutubeHttpClient]
   YoutubeHttpClient([http.Client? httpClient])
@@ -346,9 +349,9 @@ class YoutubeHttpClient extends http.BaseClient {
     if (_closed) throw HttpClientClosedException();
 
     // Apply default headers if they are not already present
-    _defaultHeaders.forEach((key, value) {
+    headers.forEach((key, value) {
       if (request.headers[key] == null) {
-        request.headers[key] = _defaultHeaders[key]!;
+        request.headers[key] = headers[key]!;
       }
     });
 

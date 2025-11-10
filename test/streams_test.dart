@@ -66,7 +66,11 @@ void main() {
         () async {
           final manifest = await yt!.videos.streams.getManifest(val.id);
           for (final streamInfo in manifest.streams) {
-            expect(yt!.videos.streams.get(streamInfo, 0, 0).first, completes);
+            expect(
+                yt!.videos.streams
+                    .get(streamInfo, 0, streamInfo.size.totalBytes)
+                    .first,
+                completes);
           }
         },
         timeout: const Timeout(Duration(minutes: 20)),

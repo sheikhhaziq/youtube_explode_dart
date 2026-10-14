@@ -33,7 +33,7 @@ Future<void> download(String id) async {
 
   // Get the audio track with the highest bitrate.
   final audio = streams.withHighestBitrate();
-  final audioStream = yt.videos.streamsClient.get(audio);
+  final audioStream = yt.videos.streamsClient.get(audio,0,1);
 
   // Compose the file name removing the unallowed characters in windows.
   final fileName = '${video.title}.${audio.container.name}'

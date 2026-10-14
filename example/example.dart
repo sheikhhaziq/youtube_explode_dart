@@ -21,7 +21,7 @@ Future<void> main() async {
   final audio = manifest.audioOnly;
 
   // Download it
-  final stream = yt.videos.streams.get(audio.first);
+  final stream = yt.videos.streams.get(audio.first,0,1);
   // then pipe the stream to a file...
 
   // Or you can use the url to stream it directly.

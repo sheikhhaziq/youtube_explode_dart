@@ -142,23 +142,11 @@ class YoutubeHttpClient extends http.BaseClient {
     StreamInfo streamInfo, {
     Map<String, String> headers = const {},
     bool validate = true,
-    int start = 0,
+    required int start,
+     required int end,
     int errorCount = 0,
     required StreamClient streamClient,
   }) {
-    if (streamInfo.fragments.isNotEmpty) {
-      // DASH(fragmented) stream
-      return _getFragmentedStream(
-        streamInfo,
-        headers: headers,
-        validate: validate,
-        start: start,
-        errorCount: errorCount,
-      );
-    }
-    if (streamInfo is HlsStreamInfo) {
-      return _getHlsStream(streamInfo);
-    }
     // Normal stream
     return _getStream(
       streamInfo,
@@ -166,46 +154,27 @@ class YoutubeHttpClient extends http.BaseClient {
       headers: headers,
       validate: validate,
       start: start,
+      end:end,
       errorCount: errorCount,
     );
-  }
-
-  Stream<List<int>> _getFragmentedStream(
-    StreamInfo streamInfo, {
-    Map<String, String> headers = const {},
-    bool validate = true,
-    int start = 0,
-    int errorCount = 0,
-  }) async* {
-    // This is the base url.
-    final url = streamInfo.url;
-    for (final fragment in streamInfo.fragments) {
-      final req = await retry(
-        this,
-        () => get(Uri.parse(url.toString() + fragment.path)),
-      );
-      yield req.bodyBytes;
-    }
   }
 
   Stream<List<int>> _getStream(
     StreamInfo streamInfo, {
     Map<String, String> headers = const {},
     bool validate = true,
-    int start = 0,
+    required int start,
+    required int end,
     int errorCount = 0,
     required StreamClient streamClient,
   }) async* {
     var url = streamInfo.url;
     var bytesCount = start;
-    while (!_closed && bytesCount != streamInfo.size.totalBytes) {
+    while (!_closed && bytesCount != end) {
       try {
         final response = await retry(this, () async {
           final from = bytesCount;
-          final to = (streamInfo.isThrottled
-                  ? (bytesCount + 10379935)
-                  : streamInfo.size.totalBytes) -
-              1;
+          final to = end;
 
           late final http.Request request;
           if (url.queryParameters['c'] == 'ANDROID') {
@@ -259,6 +228,7 @@ class YoutubeHttpClient extends http.BaseClient {
           headers: headers,
           validate: validate,
           start: bytesCount,
+          end: end,
           errorCount: errorCount + 1,
         );
         break;
